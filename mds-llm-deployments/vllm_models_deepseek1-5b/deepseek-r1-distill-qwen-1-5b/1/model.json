@@ -1,0 +1,10 @@
+{
+    "model":"deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B",
+    "download_dir": "/models/vllm-download",
+    "disable_log_requests": "true",
+    "gpu_memory_utilization": 0.9,
+    "tensor_parallel_size": 1,
+    "max_num_seqs": 112,
+    "max_model_len": 17000,
+    "enforce_eager": "true"
+}
