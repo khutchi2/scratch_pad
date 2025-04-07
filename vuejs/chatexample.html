@@ -3,12 +3,12 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Vue Table with Selection</title>
+  <title>Vue Compare Descriptions</title>
   <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
   <style>
     table {
       border-collapse: collapse;
-      width: 70%;
+      width: 90%;
       margin: 20px auto;
     }
     th, td {
@@ -22,38 +22,127 @@
     input[type="checkbox"] {
       transform: scale(1.2);
     }
+    .text-preview {
+      cursor: pointer;
+      color: blue;
+      text-decoration: underline;
+    }
+    .modal-overlay {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: rgba(0,0,0,0.5);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+    .modal {
+      background: #fff;
+      padding: 20px;
+      max-width: 80%;
+      max-height: 90vh;
+      overflow-y: auto;
+      border-radius: 8px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+    }
+    .modal-close {
+      margin-top: 10px;
+      text-align: right;
+    }
+    .modal-close button {
+      padding: 5px 10px;
+    }
+    .compare-button {
+      display: block;
+      margin: 20px auto;
+      padding: 10px 15px;
+      background-color: #007bff;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+    .compare-container {
+      display: flex;
+      gap: 20px;
+    }
+    .compare-column {
+      flex: 1;
+      border: 1px solid #ddd;
+      padding: 10px;
+      background-color: #f9f9f9;
+      white-space: pre-wrap;
+    }
   </style>
 </head>
 <body>
   <div id="app">
-    <h2 style="text-align:center;">User Data Table with Selection</h2>
+    <h2 style="text-align:center;">User Data Table with Compare Descriptions</h2>
+
     <table v-if="users.length">
       <thead>
         <tr>
-          <th>
-            <input type="checkbox" @change="toggleSelectAll" :checked="areAllSelected" />
-          </th>
+          <th><input type="checkbox" @change="toggleSelectAll" :checked="areAllSelected" /></th>
           <th>Name</th>
           <th>Email</th>
           <th>Age</th>
+          <th>Description</th>
         </tr>
       </thead>
       <tbody>
         <tr v-for="user in users" :key="user.id">
-          <td>
-            <input type="checkbox" :value="user.id" v-model="selectedIds" />
-          </td>
+          <td><input type="checkbox" :value="user.id" v-model="selectedIds" /></td>
           <td>{{ user.name }}</td>
           <td>{{ user.email }}</td>
           <td>{{ user.age }}</td>
+          <td>
+            <span class="text-preview" @click="showFullText(user.text)">
+              {{ user.text.length > 30 ? user.text.slice(0, 30) + '...' : user.text }}
+            </span>
+          </td>
         </tr>
       </tbody>
     </table>
-    <p v-else style="text-align:center;">Loading data...</p>
 
-    <div style="text-align:center; margin-top: 20px;" v-if="selectedIds.length">
+    <div v-if="selectedIds.length" style="text-align:center; margin-top: 10px;">
       <strong>Selected User IDs:</strong> {{ selectedIds.join(', ') }}
     </div>
+
+    <!-- Compare Button -->
+    <button
+      v-if="selectedIds.length === 2"
+      class="compare-button"
+      @click="showCompareModal"
+    >
+      Compare Descriptions
+    </button>
+
+    <!-- Modal for Full Text -->
+    <div class="modal-overlay" v-if="fullText !== null" @click.self="fullText = null">
+      <div class="modal">
+        <h3>Full Description</h3>
+        <p>{{ fullText }}</p>
+        <div class="modal-close">
+          <button @click="fullText = null">Close</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Compare Modal -->
+    <div class="modal-overlay" v-if="compareTexts.length" @click.self="compareTexts = []">
+      <div class="modal">
+        <h3>Compare Descriptions</h3>
+        <div class="compare-container">
+          <div class="compare-column" v-for="(text, index) in compareTexts" :key="index">
+            {{ text }}
+          </div>
+        </div>
+        <div class="modal-close">
+          <button @click="compareTexts = []">Close</button>
+        </div>
+      </div>
+    </div>
+
   </div>
 
   <script>
@@ -61,8 +150,10 @@
       data() {
         return {
           users: [],
-          selectedIds: []
-        }
+          selectedIds: [],
+          fullText: null,
+          compareTexts: []
+        };
       },
       computed: {
         areAllSelected() {
@@ -71,18 +162,39 @@
       },
       methods: {
         toggleSelectAll(event) {
-          if (event.target.checked) {
-            this.selectedIds = this.users.map(user => user.id);
-          } else {
-            this.selectedIds = [];
-          }
+          this.selectedIds = event.target.checked ? this.users.map(u => u.id) : [];
+        },
+        showFullText(text) {
+          this.fullText = text;
+        },
+        showCompareModal() {
+          const selectedUsers = this.users.filter(user => this.selectedIds.includes(user.id));
+          this.compareTexts = selectedUsers.map(user => user.text);
         }
       },
       mounted() {
         const jsonData = [
-          { id: 1, name: "Alice Johnson", email: "alice@example.com", age: 25 },
-          { id: 2, name: "Bob Smith", email: "bob@example.com", age: 30 },
-          { id: 3, name: "Charlie Lee", email: "charlie@example.com", age: 22 }
+          {
+            id: 1,
+            name: "Alice Johnson",
+            email: "alice@example.com",
+            age: 25,
+            text: "Alice is a software engineer with a passion for clean code and user-centered design. She enjoys collaborating on cross-functional teams and mentoring junior developers."
+          },
+          {
+            id: 2,
+            name: "Bob Smith",
+            email: "bob@example.com",
+            age: 30,
+            text: "Bob has over 10 years of experience in full-stack development. He specializes in scalable backend systems and loves tinkering with new JavaScript frameworks."
+          },
+          {
+            id: 3,
+            name: "Charlie Lee",
+            email: "charlie@example.com",
+            age: 22,
+            text: "Charlie is a recent graduate who excels at frontend development and UI/UX design. He's always looking for innovative ways to enhance user experience."
+          }
         ];
         setTimeout(() => {
           this.users = jsonData;
