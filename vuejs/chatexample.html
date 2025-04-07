@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Vue Table with Selection</title>
+  <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+  <style>
+    table {
+      border-collapse: collapse;
+      width: 70%;
+      margin: 20px auto;
+    }
+    th, td {
+      border: 1px solid #ccc;
+      padding: 8px 12px;
+      text-align: left;
+    }
+    th {
+      background-color: #f4f4f4;
+    }
+    input[type="checkbox"] {
+      transform: scale(1.2);
+    }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <h2 style="text-align:center;">User Data Table with Selection</h2>
+    <table v-if="users.length">
+      <thead>
+        <tr>
+          <th>
+            <input type="checkbox" @change="toggleSelectAll" :checked="areAllSelected" />
+          </th>
+          <th>Name</th>
+          <th>Email</th>
+          <th>Age</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr v-for="user in users" :key="user.id">
+          <td>
+            <input type="checkbox" :value="user.id" v-model="selectedIds" />
+          </td>
+          <td>{{ user.name }}</td>
+          <td>{{ user.email }}</td>
+          <td>{{ user.age }}</td>
+        </tr>
+      </tbody>
+    </table>
+    <p v-else style="text-align:center;">Loading data...</p>
+
+    <div style="text-align:center; margin-top: 20px;" v-if="selectedIds.length">
+      <strong>Selected User IDs:</strong> {{ selectedIds.join(', ') }}
+    </div>
+  </div>
+
+  <script>
+    const app = Vue.createApp({
+      data() {
+        return {
+          users: [],
+          selectedIds: []
+        }
+      },
+      computed: {
+        areAllSelected() {
+          return this.selectedIds.length === this.users.length && this.users.length > 0;
+        }
+      },
+      methods: {
+        toggleSelectAll(event) {
+          if (event.target.checked) {
+            this.selectedIds = this.users.map(user => user.id);
+          } else {
+            this.selectedIds = [];
+          }
+        }
+      },
+      mounted() {
+        const jsonData = [
+          { id: 1, name: "Alice Johnson", email: "alice@example.com", age: 25 },
+          { id: 2, name: "Bob Smith", email: "bob@example.com", age: 30 },
+          { id: 3, name: "Charlie Lee", email: "charlie@example.com", age: 22 }
+        ];
+        setTimeout(() => {
+          this.users = jsonData;
+        }, 1000);
+      }
+    });
+
+    app.mount('#app');
+  </script>
+</body>
+</html>
