@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Vue Compare Descriptions</title>
+  <title>Vue Compare Descriptions (Stacked)</title>
   <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
   <style>
     table {
@@ -35,6 +35,7 @@
       display: flex;
       justify-content: center;
       align-items: center;
+      z-index: 1000;
     }
     .modal {
       background: #fff;
@@ -62,22 +63,27 @@
       border-radius: 6px;
       cursor: pointer;
     }
-    .compare-container {
+    .stacked-comparison {
       display: flex;
-      gap: 20px;
+      flex-direction: column;
+      gap: 16px;
     }
-    .compare-column {
-      flex: 1;
+    .compare-block {
       border: 1px solid #ddd;
       padding: 10px;
       background-color: #f9f9f9;
+      border-radius: 6px;
       white-space: pre-wrap;
+    }
+    .compare-block h4 {
+      margin-top: 0;
+      margin-bottom: 5px;
     }
   </style>
 </head>
 <body>
   <div id="app">
-    <h2 style="text-align:center;">User Data Table with Compare Descriptions</h2>
+    <h2 style="text-align:center;">User Data Table with Stacked Comparison</h2>
 
     <table v-if="users.length">
       <thead>
@@ -110,11 +116,11 @@
 
     <!-- Compare Button -->
     <button
-      v-if="selectedIds.length === 2"
+      v-if="selectedIds.length >= 2"
       class="compare-button"
       @click="showCompareModal"
     >
-      Compare Descriptions
+      Compare Descriptions ({{ selectedIds.length }})
     </button>
 
     <!-- Modal for Full Text -->
@@ -128,17 +134,18 @@
       </div>
     </div>
 
-    <!-- Compare Modal -->
-    <div class="modal-overlay" v-if="compareTexts.length" @click.self="compareTexts = []">
+    <!-- Compare Modal (Stacked) -->
+    <div class="modal-overlay" v-if="compareBlocks.length" @click.self="compareBlocks = []">
       <div class="modal">
         <h3>Compare Descriptions</h3>
-        <div class="compare-container">
-          <div class="compare-column" v-for="(text, index) in compareTexts" :key="index">
-            {{ text }}
+        <div class="stacked-comparison">
+          <div class="compare-block" v-for="(block, index) in compareBlocks" :key="index">
+            <h4>{{ block.name }}</h4>
+            <p>{{ block.text }}</p>
           </div>
         </div>
         <div class="modal-close">
-          <button @click="compareTexts = []">Close</button>
+          <button @click="compareBlocks = []">Close</button>
         </div>
       </div>
     </div>
@@ -152,7 +159,7 @@
           users: [],
           selectedIds: [],
           fullText: null,
-          compareTexts: []
+          compareBlocks: []
         };
       },
       computed: {
@@ -169,7 +176,10 @@
         },
         showCompareModal() {
           const selectedUsers = this.users.filter(user => this.selectedIds.includes(user.id));
-          this.compareTexts = selectedUsers.map(user => user.text);
+          this.compareBlocks = selectedUsers.map(user => ({
+            name: `${user.name} (ID: ${user.id})`,
+            text: user.text
+          }));
         }
       },
       mounted() {
@@ -194,6 +204,13 @@
             email: "charlie@example.com",
             age: 22,
             text: "Charlie is a recent graduate who excels at frontend development and UI/UX design. He's always looking for innovative ways to enhance user experience."
+          },
+          {
+            id: 4,
+            name: "Dana Cruz",
+            email: "dana@example.com",
+            age: 28,
+            text: "Dana works as a DevOps engineer and has been instrumental in automating CI/CD pipelines for multiple enterprise projects."
           }
         ];
         setTimeout(() => {
