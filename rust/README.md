@@ -33,6 +33,7 @@ fn main(){
     ```rust
     let deck: Deck = Deck {cards: vec![] },
     ```
+    - Struct attributes: A way to tell the compiler to automatically include a set of functions into a struct: `#[derive(Debug)]` tells the compiler, "Put all of the debug stuff into this struct"
 - Data
     - Vector: a dynamic-sized data container
     - Array: a fixed data container
