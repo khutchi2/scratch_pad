@@ -24,3 +24,7 @@ Notes on my studies and learnings of LLMs.,
 - If you quantize to 16bit, you halve the RAM requirement
 - During training, due to optimizer states, gradients, activations, etc. you may need up to 20bytes/parameter of RAM
     - 5X what it takes to host it
+## What is HuggingFace?
+- Basically GitHub for models
+- Has libraries for transformers, datasets, models
+- 
