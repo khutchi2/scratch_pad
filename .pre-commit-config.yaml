@@ -1,0 +1,10 @@
+repos:
+  - repo: https://github.com/kynan/nbstripout
+    rev: 0.8.1            # or pin to the latest stable tag
+    hooks:
+      - id: nbstripout
+        name: Strip output from Jupyter notebooks
+        entry: nbstripout
+        language: python
+        files: \.ipynb$
+  # (You can add more repos/hooks here, e.g. black, flake8, etc.)
