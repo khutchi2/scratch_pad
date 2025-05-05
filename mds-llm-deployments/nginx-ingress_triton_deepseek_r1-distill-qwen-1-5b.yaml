@@ -1,0 +1,32 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  annotations:
+    nginx.ingress.kubernetes.io/backend-protocol: "HTTP"
+    # Timeout for reading the client request body
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "300"    # seconds
+    # Timeout for reading the response from the upstream server
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "300"    # seconds
+    # Timeout for establishing a connection to the upstream server
+    nginx.ingress.kubernetes.io/proxy-connect-timeout: "300" # seconds
+    # Keep-alive timeout
+    nginx.ingress.kubernetes.io/proxy-next-upstream-timeout: "300" # seconds
+    nginx.ingress.kubernetes.io/use-regex: "true"
+    nginx.ingress.kubernetes.io/rewrite-target:  /$2
+  finalizers:
+    - ingress.k8s.aws/resources
+  name: deepseek-r1-distill-qwen-1-5b-rest
+  namespace: seldon-mesh
+spec:
+  ingressClassName: internal-nginx
+  rules:
+    - host:
+      http:
+        paths:
+        - backend:
+            service:
+              name: deepseek-r1-distill-qwen-1-5b
+              port:
+                number: 9000
+          path: /deepseek1b(/|$)(.*)
+          pathType: ImplementationSpecific
