@@ -27,4 +27,13 @@ Notes on my studies and learnings of LLMs.,
 ## What is HuggingFace?
 - Basically GitHub for models
 - Has libraries for transformers, datasets, models
-- 
+## Fine-tuning
+- Fine-tuning really just amounts to further training the model with the trained weights as your initial set of weights
+- All you need is to bring a focused dataset for your particular task or application
+- 2 Main Types:
+    1. Full-parameter fine-tuning: Fully update all of the model weights through fine-tuning.  This can lead to catostrophic forgetting (think Spongebob learning only fine-dining and breathing) where the model learns the fine-tuning task and forgets how to do everything else
+    2. Parameter efficient fine-tuning: Only updates a portion of the weights during fine-tuning and avoids catostrophic forgetting
+- LoRA: Low Rank Adaptation of LLMs
+    - Lets you train a small set of weights to update your model isntead of billions upon billions
+    - When you fine-tune train a model and push it to HFHub, you're actually just pushing an "adapter_model.bin" instead of the full modified model.  That amounts to just pushing the modifications needed for the full model to behave in the fine-tuned way
+
