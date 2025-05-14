@@ -1,29 +1,34 @@
 #!/usr/bin/env python3
 """
-Abbottabad Dataset Explorer
-----------------------------------
-A PyQt6 application that browses an EFS-mounted directory (or any local path)
-and previews documents, images, HTML, audio, and video files. It also offers a
-simple filename search bar.
+Abbottabad Dataset Explorer (Pandoc Edition)
+-------------------------------------------
+A PyQt 6 desktop application that browses an EFS-mounted directory (or any local
+path) and previews documents, images, HTML, audio and video.  It now uses
+**pypandoc 1.15** (with a system Pandoc install) to convert *DOCX → HTML* for
+inline viewing instead of *docx2html*.
 
 Requirements
 ------------
-    pip install PyQt6 PyQt6-Qt6 PyQt6-WebEngine python-docx2html
+    # GUI & multimedia
+    pip install "PyQt6>=6.6" "PyQt6-Qt6" "PyQt6-WebEngine"
 
-On Linux, you may also need GStreamer packages for multimedia playback, e.g.:
+    # DOCX→HTML conversion
+    pip install "pypandoc==1.15"
+    # and make sure Pandoc ⩾ 2.0 is installed on the OS PATH
+
+On Linux you may also need GStreamer for media playback, e.g.:
     sudo apt install gstreamer1.0-libav gstreamer1.0-plugins-{base,good,bad,ugly}
 
 Usage
 -----
-    python abbottabad_explorer.py  # assumes EFS mounted at /mnt/efs/abbottabad
+    python abbottabad_explorer.py            # assumes /mnt/efs/abbottabad
     python abbottabad_explorer.py --root /path/to/dataset
 
 Mounting EFS (example)
 ----------------------
-    sudo yum install -y amazon-efs-utils   # (Amazon Linux) or use OS NFS client
+    sudo yum install -y amazon-efs-utils      # (Amazon Linux)
     sudo mkdir -p /mnt/efs/abbottabad
     sudo mount -t efs fs-12345678:/ /mnt/efs/abbottabad
-
 """
 
 from __future__ import annotations
@@ -33,12 +38,11 @@ import sys
 from pathlib import Path
 
 from PyQt6.QtCore import Qt, QSortFilterProxyModel, QUrl
-from PyQt6.QtGui import QDesktopServices, QPixmap
+from PyQt6.QtGui import QDesktopServices, QPixmap, QFileSystemModel
 from PyQt6.QtMultimedia import QAudioOutput, QMediaPlayer
 from PyQt6.QtMultimediaWidgets import QVideoWidget
 from PyQt6.QtWidgets import (
     QApplication,
-    QFileSystemModel,
     QLabel,
     QLineEdit,
     QMainWindow,
@@ -51,10 +55,13 @@ from PyQt6.QtWidgets import (
 )
 from PyQt6.QtWebEngineWidgets import QWebEngineView
 
+# -----------------------------------------------------------------------------
+# Optional dependency: pypandoc
+# -----------------------------------------------------------------------------
 try:
-    from docx2html import convert as docx2html_convert
-except ImportError:  # graceful fallback if not installed
-    docx2html_convert = None
+    import pypandoc  # type: ignore
+except ImportError:  # graceful fallback if not available
+    pypandoc = None
 
 
 class Viewer(QWidget):
@@ -67,17 +74,17 @@ class Viewer(QWidget):
         layout.setContentsMargins(0, 0, 0, 0)
         layout.addWidget(self.stack)
 
-        # --- Image preview -------------------------------------------------
+        # ── Image preview ──────────────────────────────────────────────────
         self.image_label = QLabel(alignment=Qt.AlignmentFlag.AlignCenter)
         self.image_label.setScaledContents(True)
         self.image_label.setSizePolicy(
             QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding
         )
 
-        # --- Web view (HTML, PDF, converted DOCX) --------------------------
+        # ── Web view (HTML, PDF, converted DOCX) ───────────────────────────
         self.web_view = QWebEngineView()
 
-        # --- Media player (audio / video) ----------------------------------
+        # ── Media player (audio / video) ───────────────────────────────────
         self.video_widget = QVideoWidget()
         self.media_player = QMediaPlayer()
         self.audio_output = QAudioOutput()
@@ -86,8 +93,8 @@ class Viewer(QWidget):
 
         # Add widgets to the stack in fixed order
         self.stack.addWidget(self.image_label)  # index 0
-        self.stack.addWidget(self.web_view)  # index 1
-        self.stack.addWidget(self.video_widget)  # index 2
+        self.stack.addWidget(self.web_view)     # index 1
+        self.stack.addWidget(self.video_widget) # index 2
 
     # ---------------------------------------------------------------------
     # Public API
@@ -100,31 +107,35 @@ class Viewer(QWidget):
 
         suffix = path.suffix.lower()
 
-        # -- Images ---------------------------------------------------------
+        # ── Images ─────────────────────────────────────────────────────────
         if suffix in {".png", ".jpg", ".jpeg", ".gif", ".bmp", ".webp"}:
             pix = QPixmap(str(path))
             self.image_label.setPixmap(pix)
             self.stack.setCurrentWidget(self.image_label)
             return
 
-        # -- HTML or PDF ----------------------------------------------------
+        # ── HTML or PDF ───────────────────────────────────────────────────
         if suffix in {".html", ".htm", ".pdf"}:
             self.web_view.load(QUrl.fromLocalFile(str(path)))
             self.stack.setCurrentWidget(self.web_view)
             return
 
-        # -- DOCX -----------------------------------------------------------
+        # ── DOCX via Pandoc ────────────────────────────────────────────────
         if suffix == ".docx":
-            if docx2html_convert is None:
-                # docx2html not available: fall back to external opener
+            if pypandoc is None:
+                # pypandoc not installed → open externally
                 QDesktopServices.openUrl(QUrl.fromLocalFile(str(path)))
                 return
-            html = docx2html_convert(str(path))
+            try:
+                html = pypandoc.convert_file(str(path), to="html", format="docx")
+            except (RuntimeError, OSError):  # Pandoc missing or error
+                QDesktopServices.openUrl(QUrl.fromLocalFile(str(path)))
+                return
             self.web_view.setHtml(html, baseUrl=QUrl.fromLocalFile(str(path.parent)))
             self.stack.setCurrentWidget(self.web_view)
             return
 
-        # -- Video or Audio -------------------------------------------------
+        # ── Video or Audio ────────────────────────────────────────────────
         if suffix in {
             ".mp4",
             ".mkv",
@@ -137,11 +148,12 @@ class Viewer(QWidget):
         }:
             self.media_player.setSource(QUrl.fromLocalFile(str(path)))
             self.media_player.play()
+            # Hide video widget for pure-audio formats
             self.video_widget.setVisible(suffix not in {".mp3", ".wav", ".flac", ".ogg"})
             self.stack.setCurrentWidget(self.video_widget)
             return
 
-        # -- Fallback -------------------------------------------------------
+        # ── Fallback: open with system default app ────────────────────────
         QDesktopServices.openUrl(QUrl.fromLocalFile(str(path)))
 
 
@@ -152,20 +164,20 @@ class Explorer(QMainWindow):
         super().__init__()
         self.setWindowTitle("Abbottabad Dataset Explorer")
 
-        # ------------------- Search bar ------------------------------------
-        self.search_bar = QLineEdit(placeholderText="Search file name… (wildcards allowed)")
+        # ── Search bar ────────────────────────────────────────────────────
+        self.search_bar = QLineEdit(placeholderText="Search file name… (wildcards OK)")
 
-        # ------------------- File model ------------------------------------
+        # ── File model ────────────────────────────────────────────────────
         self.model = QFileSystemModel()
         self.model.setRootPath(str(root_path))
         self.model.setNameFilterDisables(False)
 
-        # ------------------- Proxy for search filter -----------------------
+        # ── Proxy for filename filter ─────────────────────────────────────
         self.proxy = QSortFilterProxyModel()
         self.proxy.setFilterCaseSensitivity(Qt.CaseSensitivity.CaseInsensitive)
         self.proxy.setSourceModel(self.model)
 
-        # ------------------- Tree view -------------------------------------
+        # ── Tree view ─────────────────────────────────────────────────────
         self.tree = QTreeView()
         self.tree.setModel(self.proxy)
         self.tree.setRootIndex(self.proxy.mapFromSource(self.model.index(str(root_path))))
@@ -174,10 +186,10 @@ class Explorer(QMainWindow):
         self.tree.sortByColumn(0, Qt.SortOrder.AscendingOrder)
         self.tree.setHeaderHidden(False)
 
-        # ------------------- Preview widget --------------------------------
+        # ── Preview widget ────────────────────────────────────────────────
         self.viewer = Viewer()
 
-        # ------------------- Layout ----------------------------------------
+        # ── Layout ────────────────────────────────────────────────────────
         splitter = QSplitter()
         splitter.addWidget(self.tree)
         splitter.addWidget(self.viewer)
@@ -194,15 +206,15 @@ class Explorer(QMainWindow):
         # Connect search
         self.search_bar.textChanged.connect(self._on_search_text_changed)
 
-    # ---------------------------------------------------------------------
+    # ------------------------------------------------------------------
     # Slots
-    # ---------------------------------------------------------------------
+    # ------------------------------------------------------------------
     def _on_search_text_changed(self, text: str):
         pattern = f"*{text}*" if text else "*"
         self.proxy.setFilterWildcard(pattern)
 
     def open_file(self, proxy_index):
-        """Handle double-click: display the selected file."""
+        """Open or preview the selected file."""
         source_idx = self.proxy.mapToSource(proxy_index)
         path = Path(self.model.filePath(source_idx))
         if path.is_file():

@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><title>Abbottabad Dataset Explorer</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/modern-normalize/modern-normalize.min.css">
+<style>
+body{display:flex;height:100vh;margin:0;font-family:sans-serif}
+#tree{width:320px;overflow:auto;border-right:1px solid #ccc;padding:4px}
+#preview{flex:1;display:flex;justify-content:center;align-items:start;overflow:auto}
+#preview>*{max-width:100%;max-height:100vh}
+ul{list-style:none;padding-left:1em}
+li{cursor:pointer;margin:2px 0}
+li.dir{font-weight:bold}
+li:hover{text-decoration:underline}
+</style>
+</head>
+<body>
+<div id="tree"></div>
+<div id="preview"><p>Select a file…</p></div>
+<script>
+async function list(path=""){
+  const res=await fetch(`/api/list?path=${encodeURIComponent(path)}`);return res.json();
+}
+function createNode(item){
+  const li=document.createElement('li');
+  li.textContent=item.name;
+  li.dataset.path=item.path;
+  li.className=item.is_dir?'dir':'file';
+  if(item.is_dir)li.addEventListener('click',toggleDir);
+  else li.addEventListener('click',viewFile);
+  return li;
+}
+async function toggleDir(e){
+  e.stopPropagation();
+  const li=e.target;
+  if(li.dataset.loaded){li.querySelector('ul').classList.toggle('hidden');return;}
+  const ul=document.createElement('ul');
+  const children=await list(li.dataset.path);
+  children.forEach(ch=>ul.appendChild(createNode(ch)));
+  li.appendChild(ul);
+  li.dataset.loaded=true;
+}
+async function viewFile(e){
+  const path=e.target.dataset.path;
+  const prev=document.getElementById('preview');
+  prev.innerHTML='Loading…';
+  const ext=path.split('.').pop().toLowerCase();
+  if(['png','jpg','jpeg','gif','webp'].includes(ext)){
+    prev.innerHTML=`<img src="/preview?path=${encodeURIComponent(path)}"/>`;
+  }else if(['mp4','mkv','mov','avi'].includes(ext)){
+    prev.innerHTML=`<video controls src="/preview?path=${encodeURIComponent(path)}" style="max-width:100%"></video>`;
+  }else if(['mp3','wav','flac','ogg'].includes(ext)){
+    prev.innerHTML=`<audio controls src="/preview?path=${encodeURIComponent(path)}"></audio>`;
+  }else if(ext==='pdf'){
+    prev.innerHTML=`<iframe style="width:100%;height:100vh" src="/preview?path=${encodeURIComponent(path)}"></iframe>`;
+  }else{
+    const r=await fetch(`/preview?path=${encodeURIComponent(path)}`);
+    const ct=r.headers.get('content-type');
+    if(ct && ct.startsWith('text/html')){
+      prev.innerHTML=await r.text();
+    }else{ // unknown binary ⇒ trigger download
+      window.open(`/preview?path=${encodeURIComponent(path)}`,'_blank');
+      prev.innerHTML='<p>Download triggered.</p>';
+    }
+  }
+}
+(async()=>{
+  const root=await list("");
+  const ul=document.createElement('ul');
+  root.forEach(item=>ul.appendChild(createNode(item)));
+  document.getElementById('tree').appendChild(ul);
+})();
+</script>
+</body></html>
