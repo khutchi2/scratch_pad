@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Abbottabad Dataset Explorer – Vue Edition</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <!-- Tailwind via CDN for quick styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Vue 3 CDN -->
+    <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+  </head>
+  <body class="h-screen overflow-hidden">
+    <div id="app"></div>
+
+    <script type="module">
+      const { createApp, reactive, ref, defineComponent, onMounted } = Vue;
+
+      // ------------------------------------------------------
+      // Utility helpers
+      // ------------------------------------------------------
+      const api = {
+        async list(path = "") {
+          const res = await fetch(`/api/list?path=${encodeURIComponent(path)}`);
+          if (!res.ok) throw new Error(await res.text());
+          return res.json();
+        },
+        async search(q) {
+          const res = await fetch(`/api/search?q=${encodeURIComponent(q)}`);
+          if (!res.ok) throw new Error(await res.text());
+          return res.json();
+        },
+      };
+
+      // ------------------------------------------------------
+      // Recursive FileNode component
+      // ------------------------------------------------------
+      const FileNode = defineComponent({
+        name: "FileNode",
+        props: {
+          node: { type: Object, required: true },
+        },
+        emits: ["fileSelected"],
+        setup(props, { emit }) {
+          const open = ref(false);
+          const children = ref(null);
+
+          async function toggle() {
+            if (!props.node.is_dir) {
+              emit("fileSelected", props.node);
+              return;
+            }
+            open.value = !open.value;
+            if (open.value && children.value === null) {
+              children.value = await api.list(props.node.path);
+            }
+          }
+
+          return { open, children, toggle };
+        },
+        template: `
+          <li class="select-none">
+            <div @click="toggle" class="cursor-pointer hover:underline" :class="{ 'font-bold': node.is_dir }">
+              <span v-if="node.is_dir">▶️</span>
+              {{ node.name }}
+            </div>
+            <ul v-if="open && children" class="pl-4">
+              <FileNode v-for="child in children" :key="child.path" :node="child" @fileSelected="$emit('fileSelected', $event)" />
+            </ul>
+          </li>
+        `,
+        components: { FileNode: null }, // will be self‑registered later
+      });
+      // Self‑registration (recursive)
+      FileNode.components.FileNode = FileNode;
+
+      // ------------------------------------------------------
+      // Main App component
+      // ------------------------------------------------------
+      const App = {
+        name: "AbbottabadExplorer",
+        components: { FileNode },
+        setup() {
+          const nodes = ref([]);
+          const search = ref("");
+          const previewSrc = ref("");
+          const previewType = ref("");
+          const error = ref(null);
+
+          async function loadRoot() {
+            try {
+              nodes.value = await api.list("");
+            } catch (e) {
+              error.value = e.message;
+            }
+          }
+
+          async function doSearch() {
+            const q = search.value.trim();
+            if (!q) {
+              await loadRoot();
+              return;
+            }
+            try {
+              const results = await api.search(q);
+              nodes.value = results.map((p) => {
+                const name = p.split("/").pop();
+                return { name, path: p, is_dir: false };
+              });
+            } catch (e) {
+              error.value = e.message;
+            }
+          }
+
+          function selectFile(node) {
+            previewSrc.value = `/preview?path=${encodeURIComponent(node.path)}`;
+            const ext = node.path.split(".").pop().toLowerCase();
+            previewType.value = ext;
+          }
+
+          onMounted(loadRoot);
+          return { nodes, search, previewSrc, previewType, selectFile, doSearch, error };
+        },
+        template: `
+          <div class="flex h-full">
+            <aside class="w-80 border-r overflow-auto p-2">
+              <input v-model="search" @input="doSearch" placeholder="Search filename…" class="w-full mb-2 p-1 border rounded" />
+              <div v-if="error" class="text-red-600 text-sm">{{ error }}</div>
+              <ul>
+                <FileNode v-for="n in nodes" :key="n.path" :node="n" @fileSelected="selectFile" />
+              </ul>
+            </aside>
+
+            <main class="flex-1 overflow-auto flex items-start justify-center">
+              <div v-if="!previewSrc" class="m-auto text-gray-500">Select a file…</div>
+
+              <!-- Image preview -->
+              <img v-if="['png','jpg','jpeg','gif','webp','bmp'].includes(previewType)" :src="previewSrc" class="max-w-full max-h-screen" />
+
+              <!-- Video preview -->
+              <video v-else-if="['mp4','mkv','mov','avi'].includes(previewType)" :src="previewSrc" controls class="max-w-full max-h-screen"></video>
+
+              <!-- Audio preview -->
+              <audio v-else-if="['mp3','wav','flac','ogg'].includes(previewType)" :src="previewSrc" controls class="w-full mt-4"></audio>
+
+              <!-- PDF or HTML or DOCX-as-HTML -->
+              <iframe v-else :src="previewSrc" class="w-full h-screen"></iframe>
+            </main>
+          </div>
+        `,
+      };
+
+      createApp(App).mount("#app");
+    </script>
+  </body>
+</html>
