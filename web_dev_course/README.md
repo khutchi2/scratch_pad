@@ -122,3 +122,27 @@ This box will have a thinner top border, no right border, a medium bottom border
 - Margin: Adds spacing outside of a border between it and other elements
 #### <div></div>
 The HTML division <div> element allows you to group together HTML elements into boxes.  The boxes in question are CSS boxes.
+
+### The Cascade
+- There's an order of importance for style application
+- Position, Specificity, Type, Importance
+    - Position: Is the rule higher or lower in the CSS itself?  Rules get applied line by line, so the lowest color will be applied last and thus "stick"
+    ```css
+    li{
+        color: red
+        color: green
+    }
+    ```
+    - Specificity: Is the selector more general or more specific?  Styling is applied from general to specific, so most specific selector styling "sticks".
+    ```css
+    li{color: blue}
+    .first-class{color: red}
+    li[draggable]{color: orange}
+    #first-id{color: purple}
+    ```
+    - Type: External, internal, inline: Styling is applied from least to most local.  So the most local "sticks" (in-line styling will override anything else)
+    - Importance: You can add an importance keyword `!important`, which trumps absolutely all other styling
+    ```css
+    li{color: red;}
+    li{color: green !important;}
+    ```
