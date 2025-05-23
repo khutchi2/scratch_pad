@@ -146,3 +146,55 @@ The HTML division <div> element allows you to group together HTML elements into 
     li{color: red;}
     li{color: green !important;}
     ```
+### Combining CSS Selectors
+- You can hone in on particular elements by combining CSS selectors:
+```html
+<p>Yellow Text</p>
+<div class = "box inner-box">
+    <p>White Text</p>
+</div>
+```
+Instead of giving classes or IDs to everything, you can combine selectors to get to elements you want to style:
+```css
+p {
+    color: yellow
+}
+.inner-box p {
+    color: white
+}
+- There are various ways to combine selectors:
+    1. Group Rule: Applies styling to each selector and combination of selectors
+    ```css
+    selector, selector {
+        color: styling
+    }
+    ```
+    2. Child: Apply styling to the direct child of the parent_selector
+    ```css
+    parent_selector > child_selector {
+        color: styling
+    }
+    ```
+    3. Descendant: Apply styling to all descendent_selectors of ancestor_selector
+      ```css
+    ancestor_selector > descendant_selector {
+        color: styling
+    }
+    ```
+    4. Chaining: Apply styling to all instances where both selectors are true (like selector & selector)
+      ```css
+    selectorselector {
+        color: styling
+    }
+    ```
+
+    5. Combine combiners!  You can combine all of the different combination rules to whatever effect is desired.
+
+### CSS Positioning
+For examples see: https://appbrewery.github.io/css-positioning/
+1. Static -- The default positioning in HTML.  Just puts the element right at the end of the previous element.
+2. Relative -- The position is relative to the default static position.
+3. Absolute -- Position to nearest positioned ancestor or if it doesn't have a positioned ancestor, it's positioned relative to the top left corner of webpage.
+4. Fixed -- Stays put in the same spot relative to top left corner of the browser window.
+
+Z - index: Positioning in the Z-axis.  The z-axis for a webpage goes in and out of the page.

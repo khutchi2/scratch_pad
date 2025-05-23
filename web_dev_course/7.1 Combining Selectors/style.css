@@ -1,0 +1,25 @@
+/* Write your code here: */
+/* group */
+h1, h2 {
+    color: blueviolet;
+}
+
+/* Child */
+.box > p {
+    color: firebrick;
+}
+
+/* Descendant */
+.box li {
+    color: blue;
+}
+
+/* Chain */
+li.done{
+    color: seagreen;
+}
+
+/* Combine */
+ul p.done {
+    font-size: 0.5rem
+}
