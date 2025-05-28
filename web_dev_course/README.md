@@ -162,6 +162,7 @@ p {
 .inner-box p {
     color: white
 }
+```
 - There are various ways to combine selectors:
     1. Group Rule: Applies styling to each selector and combination of selectors
     ```css
@@ -198,3 +199,9 @@ For examples see: https://appbrewery.github.io/css-positioning/
 4. Fixed -- Stays put in the same spot relative to top left corner of the browser window.
 
 Z - index: Positioning in the Z-axis.  The z-axis for a webpage goes in and out of the page.
+
+### CSS Display property
+Many kinds, but 3 for starters:
+- Inline: Goes horizontally in line
+- Block: 
+- Inline-block: 
