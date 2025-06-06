@@ -38,3 +38,13 @@ class Car:
         self.seats = seats
 my_car = Car(5) # Sets the seats attribute as 5
 ```
+- Methods
+  - Like function within an object.  It allows you to automatically act on your object or do other things with your object.
+```python
+class Car:
+    def __init__(self, seats):
+        print("New Car being created...")
+        self.seats = seats
+    def enter_race_mode():
+      self.seats = 2
+```
