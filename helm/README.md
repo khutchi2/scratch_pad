@@ -31,7 +31,7 @@ helm upgrade <name-of-release> <chart-location> --values <path_to_values_file>
 ```
 So for example, instead of having to define the app name as "my-super-cool-app" you can define that once in values.yaml as 
 ```yaml
-appName: "my-super-cool-app"
+appName: my-super-cool-app
 ```
 and then point to that in the various manifests as
 ```yaml
@@ -42,3 +42,15 @@ This provides several advantages
 - Don't have to worry about breaking your app by mistyping something in one manifest file
 - Central location to see all of your various values and names
 
+## values.yaml for dev and prod
+- You can setup your templating such that it can apply for different environments
+- For example, you might have a `values_dev.yaml` with `namespace: dev`, and `values_prod.yaml` with `namespace: prod`
+- When you install this application, you'll do the following
+```bash
+helm install <release-name> <chart-location> --values <chart-location>/values.yaml -f <chart-location>/values_dev.yaml -n dev
+```
+This says, install this app using these default values.  Overwrite any defaults with special values in `values_dev.yaml` and do it in HELM release namespace `dev`
+
+
+## Good resources
+- https://www.youtube.com/watch?v=jUYNS90nq8U&ab_channel=DevOpsJourney 
