@@ -1,1 +1,5 @@
 .DS_Store
+model_metrics/benchmarks
+model_metrics/model_metrics_secret.ipynb
+model_metrics/all_samples.txt
+model_metrics/gemma_prom.txt

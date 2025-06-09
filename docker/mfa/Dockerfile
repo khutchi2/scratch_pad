@@ -8,6 +8,10 @@ ADD https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh /opt/c
 
 RUN bash /opt/conda/Miniconda3-latest-Linux-x86_64.sh -b -p /opt/miniconda
 
-RUN /opt/miniconda/bin/conda env create -f environment.yaml 
-RUN /opt/miniconda/bin/conda init
-RUN /opt/miniconda/bin/conda activate mfa
+RUN . /opt/miniconda/etc/profile.d/conda.sh \
+    && conda env create -f environment.yaml \
+    && conda activate mfa
+
+ENV PATH=/opt/miniconda/envs/mfa/bin:$PATH
+
+CMD ["conda", "run", "-n", "mfa", "python"]
