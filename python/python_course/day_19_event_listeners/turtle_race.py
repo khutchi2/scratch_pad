@@ -33,5 +33,27 @@ for turt, color, y in zip(turtle_list, colors, y_vals):
     turt.color(color)
     turt.sety(y)
     turt.setx(-250)
+    turt.speed(0)
 
-screen.exitonclick()
+# Input
+prediction = screen.textinput("Place Your Bets!", "Which turtle do you think will win?")
+
+# Race Turtles
+while 250 not in [turt.xcor() for turt in turtle_list]:
+    print([turt.xcor() for turt in turtle_list])
+    for turt in turtle_list:
+        turt.forward(randint(1, 10))
+
+# Determine winner
+winner = [turt.xcor() for turt in turtle_list]
+winner_idx = winner.index(True)
+winner = colors[winner_idx]
+
+
+if prediction == winner:
+    print("Your turtle won!")
+else:
+    print("Your turtle did not win, better luck next time!")
+
+
+# screen.exitonclick()
