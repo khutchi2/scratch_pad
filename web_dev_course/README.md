@@ -203,5 +203,21 @@ Z - index: Positioning in the Z-axis.  The z-axis for a webpage goes in and out 
 ### CSS Display property
 Many kinds, but 3 for starters:
 - Inline: Goes horizontally in line
-- Block: 
-- Inline-block: 
+- Block: Shows the elements in a block
+- Inline-block: Shows blocks in line
+
+### Float Property
+- Controls text wrapping behavior around images
+- Float property is set on an image (left, right, etc) and other elements will wrap around it
+```css
+img{
+    float: left;
+}
+```
+- Clear property will ignore the float property, and the element will just go to its normal position
+```css
+footer{
+    clear: left;
+}
+```
+- 
