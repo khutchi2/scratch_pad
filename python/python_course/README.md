@@ -48,3 +48,22 @@ class Car:
     def enter_race_mode():
       self.seats = 2
 ```
+
+### Importing modules
+#### Styles
+```python
+import module
+from module import class
+import module as m
+```
+
+### Event Listeners
+- Functions that look out for things that happen
+
+### Higher Order Functions
+- Functions that take other funcitons as arguments
+```python
+def higher_order_function(function, other_arg):
+  x = function(other_arg)
+  return x
+```

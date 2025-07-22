@@ -1,0 +1,86 @@
+%---------------------------------------------
+% 			  PREAMBLE
+%---------------------------------------------
+
+\documentclass[12pt]{article}
+
+\usepackage{amsmath,amssymb,amsfonts}
+\usepackage{graphicx}
+\usepackage{xcolor}
+\usepackage[utf8]{inputenc}
+\usepackage[english]{babel}
+\usepackage{amsthm}
+\usepackage{chngcntr}
+\counterwithin{equation}{section}
+\usepackage{setspace}
+\setlength{\topmargin}{-.25in} \setlength{\textheight}{8.75in}
+\setlength{\oddsidemargin}{0in} \setlength{\textwidth}{6.8in}
+\setstretch{1.5}
+\addtolength{\jot}{4mm}  %Equation spacing
+
+\usepackage{booktabs}
+\usepackage{xparse}
+\usepackage{tikz}
+\usetikzlibrary{calc}
+
+% Allows to bold math and text together
+\usepackage{bm}
+\newcommand\bolden[1]{{\boldmath\bfseries#1}}
+
+
+% When opened in Acrobat Reader, clicking on the solution will reveal/hide the solution text
+\usepackage[tikz]{ocgx2}
+\newcounter{ocgSolution}
+\setcounter{ocgSolution}{1}
+
+\newcommand{\solution}[1]{%
+\newline
+\switchocg{\theocgSolution}{Click for Solution:}
+\begin{ocg}{OCG\theocgSolution}{\theocgSolution}{0}
+#1
+\end{ocg}
+\addtocounter{ocgSolution}{1}
+}
+
+
+
+%---------------------------------------------
+% 			  HEADER
+%---------------------------------------------
+
+\usepackage{fancyhdr}
+\setlength{\headheight}{15.2pt}
+\pagestyle{fancy}
+\lhead{ \textbf { Kyle Hutchings} }
+\rhead{ \textbf { Data Science } }
+
+%---------------------------------------------
+% 			  DOCUMENT
+%---------------------------------------------
+
+\begin{document}
+
+
+%---------------------------------------------
+% 		Module 1
+%---------------------------------------------
+
+\section{Probability}
+\subsection{Introduction}
+
+\begin{enumerate}
+
+\item \bolden{Question} 
+\solution{
+answer
+}
+
+\end{enumerate}
+
+\newpage
+
+
+
+
+
+\end{document} 
